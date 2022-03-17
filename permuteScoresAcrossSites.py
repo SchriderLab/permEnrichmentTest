@@ -1,8 +1,5 @@
 import sys, os, random
 
-clrScoreFileDir, chromNameSuffix, numPerms, outDir = sys.argv[1:]
-numPerms = int(numPerms)
-
 class Chrom:
     def __init__(self, name, sites):
         self.name = name
@@ -47,16 +44,24 @@ def permScores(clrScores):
     return permedClrScores
 
 
-header, chroms, clrScores = readClrScoreFile(clrScoreFileDir, chromNameSuffix)
+def main():
+    
+    clrScoreFileDir, chromNameSuffix, numPerms, outDir = sys.argv[1:]
+    numPerms = int(numPerms)
+    
+    header, chroms, clrScores = readClrScoreFile(clrScoreFileDir, chromNameSuffix)
 
-for perm in range(numPerms):
-    permedClrScores = permScores(clrScores)
+    for perm in range(numPerms):
+        permedClrScores = permScores(clrScores)
+    
+        i = 0
+        for chrom in random.sample(chroms, k=len(chroms)):
+            permOutFile = f"{outDir}/{chrom.name}_perm_{perm}.txt"
+            with open(permOutFile, 'wt') as pof:
+                pof.write(header + "\n")
+                for site in chrom.sites:
+                    pof.write(f"{site}\t{permedClrScores[i]}\n")
+                    i += 1
 
-    i = 0
-    for chrom in random.sample(chroms, k=len(chroms)):
-        permOutFile = f"{outDir}/{chrom.name}_perm_{perm}.txt"
-        with open(permOutFile, 'wt') as pof:
-            pof.write(header + "\n")
-            for site in chrom.sites:
-                pof.write(f"{site}\t{permedClrScores[i]}\n")
-                i += 1
+if __name__ == "__main__":
+    main()
