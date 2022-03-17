@@ -53,7 +53,7 @@ for perm in range(numPerms):
     permedClrScores = permScores(clrScores)
 
     i = 0
-    for chrom in chroms:
+    for chrom in random.sample(chroms, k=len(chroms)):
         permOutFile = f"{outDir}/{chrom.name}_perm_{perm}.txt"
         with open(permOutFile, 'wt') as pof:
             pof.write(header + "\n")
