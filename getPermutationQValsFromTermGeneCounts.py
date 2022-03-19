@@ -43,6 +43,7 @@ outLs = []
 totalCounts = {}
 outLineH = {}
 sys.stderr.write("calculating p-values\n")
+i = 0
 for term in realCounts:
     pCount = 0
     totalCount = 0
@@ -69,9 +70,15 @@ for term in realCounts:
         pValStr = str(pCount / float(totalCount))
     if not pCount in outLineH:
         outLineH[pCount] = []
+
     outLineH[pCount].append((enrichment, "%s: %s; real intersect: %s; mean permuted intersect: %s; enrichment: %s; p-value: %s" %(term, termNames.get(term, term), realCounts[term], meanIntersect, enrichment, pValStr)))
+
+    sys.stderr.write(f"done {i} of {len(realCounts)} terms-----------------\r")
+    i += 1
+
 assert len(totalCounts) == 1
 totalCount = list(totalCounts.keys())[0]
+sys.stderr.write(f"\ndone\n")
 
 
 positiveCount = len(realCounts)
