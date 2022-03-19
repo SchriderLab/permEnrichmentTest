@@ -45,15 +45,16 @@ def permScores(clrScores):
 
 
 def main():
-    
+
     clrScoreFileDir, chromNameSuffix, numPerms, outDir = sys.argv[1:]
     numPerms = int(numPerms)
-    
+
     header, chroms, clrScores = readClrScoreFile(clrScoreFileDir, chromNameSuffix)
 
+    sys.stderr.write("starting permutations\n")
     for perm in range(numPerms):
         permedClrScores = permScores(clrScores)
-    
+
         i = 0
         for chrom in random.sample(chroms, k=len(chroms)):
             permOutFile = f"{outDir}/{chrom.name}_perm_{perm}.txt"
@@ -62,6 +63,8 @@ def main():
                 for site in chrom.sites:
                     pof.write(f"{site}\t{permedClrScores[i]}\n")
                     i += 1
+        sys.stderr.write(f"done {perm} of {numPerms} permutations--------------\r")
+    sys.stderr.write("\ndone\n")
 
 if __name__ == "__main__":
     main()
