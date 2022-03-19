@@ -23,19 +23,26 @@ def readTermSigCounts(countFileName, counts, recordDefs=False):
 permCounts = []
 
 realCounts = {}
+sys.stderr.write("reading real term counts\n")
 termNames = readTermSigCounts(realCountFile, realCounts, recordDefs=True)
 
-for permFileName in os.listdir(permCountDir):
+sys.stderr.write("starting to read perm term counts\n")
+permFileNames = os.listdir(permCountDir)
+for i in range(len(permFileNames)):
     currPermCounts = {}
+
     for term in realCounts:
         currPermCounts[term] = 0
-        readTermSigCounts(permCountDir + "/" + permFileName, currPermCounts)
-        permCounts.append(currPermCounts)
 
+    readTermSigCounts(permCountDir + "/" + permFileNames[i], currPermCounts)
+    permCounts.append(currPermCounts)
+    sys.stderr.write(f"done {i} of {len(permFileNames)} perms--------\r")
+sys.stderr.write("\ndone\n")
 
 outLs = []
 totalCounts = {}
 outLineH = {}
+sys.stderr.write("calculating p-values\n")
 for term in realCounts:
     pCount = 0
     totalCount = 0
@@ -70,6 +77,7 @@ totalCount = list(totalCounts.keys())[0]
 positiveCount = len(realCounts)
 minQVal=1.0
 minNonZeroQVal=1.0
+sys.stderr.write("calculating q-values\n")
 for pCount in sorted(outLineH, reverse=True):
     pVal = pCount/float(totalCount)
     fdr = (pVal*len(realCounts))/positiveCount
@@ -89,3 +97,5 @@ for pCount in sorted(outLineH, reverse=True):
     for enrichment, outLine in sorted(outLineH[pCount]):
         print(outLine + "; q-value: %s" %(qValStr))
     positiveCount -= len(outLineH[pCount])
+
+sys.stderr.write("all done!\n")
