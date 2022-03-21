@@ -48,9 +48,9 @@ for term in realCounts:
     pCount = 0
     totalCount = 0
     permutedIntersectSum = 0
-    for permCountH in permCounts:
-        if term in permCounts:
-            permCount = permCounts[term]
+    for currPermCounts in permCounts:
+        if term in currPermCounts:
+            permCount = currPermCounts[term]
         else:
             permCount = 0
         permutedIntersectSum += permCount
