@@ -1,4 +1,4 @@
-import sys, os, random
+import sys, os, random, math
 
 class Chrom:
     def __init__(self, name, sites):
@@ -32,28 +32,50 @@ def readClrScoreFile(clrScoreFileDir, chromNameSuffix):
     return header, chroms, clrScores
 
 
-def permScores(clrScores):
+def permScores(clrScores, chunkSize=None):
     permedClrScores = []
 
     startIndex = random.randint(0, len(clrScores)-1)
 
-    for i in range(len(clrScores)):
-        currIndex = (i+startIndex) % len(clrScores)
-        permedClrScores.append(clrScores[currIndex])
+    # segment the genome into chunks and randomly shuffle them
+    if chunkSize:
+        bins = []
+        numBins = int(math.ceil(len(clrScores) / chunkSize))
+        for binIndex in range(numBins):
+            bins.append([])
+
+        for i in range(len(clrScores)):
+            binIndex = int(i / chunkSize)
+            bins[binIndex].append(clrScores[i])
+        permedBins = random.sample(bins, k=len(bins))
+
+        for binIndex in range(numBins):
+            for score in permedBins[binIndex]:
+                permedClrScores.append(score)
+        assert len(clrScores) == len(permedClrScores)
+    # giant concatenated chromosome with a random starting point
+    else:
+        for i in range(len(clrScores)):
+            currIndex = (i+startIndex) % len(clrScores)
+            permedClrScores.append(clrScores[currIndex])
 
     return permedClrScores
 
 
 def main():
 
-    clrScoreFileDir, chromNameSuffix, numPerms, outDir = sys.argv[1:]
+    clrScoreFileDir, chromNameSuffix, numPerms, chunkSize, outDir = sys.argv[1:]
     numPerms = int(numPerms)
+    chunkSize = int(chunkSize)
+
+    if chunkSize < 0:
+        sys.exit("chunkSize must be a non-negative intger. (See README)")
 
     header, chroms, clrScores = readClrScoreFile(clrScoreFileDir, chromNameSuffix)
 
     sys.stderr.write("starting permutations\n")
     for perm in range(numPerms):
-        permedClrScores = permScores(clrScores)
+        permedClrScores = permScores(clrScores, chunkSize=int(chunkSize))
 
         i = 0
         for chrom in random.sample(chroms, k=len(chroms)):
