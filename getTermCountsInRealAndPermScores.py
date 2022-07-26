@@ -12,29 +12,29 @@ import numpy as np
 import pandas as pd
 import random
 
-import allel
+#import allel
 
-def findGenesWithOutliers(scores, genes, cutoff):
-    
-    outlier_sites = scores.loc[scores["LR"] > cutoff]
-    
-    chroms = scores["chrom"].unique()
-    
-    genes_with_outlier = []
-
-    for chrom in chroms:
-
-        outlier_chunk = outlier_sites.loc[outlier_sites["chrom"] == chrom]
-
-        genes_chunk = genes.loc[genes["seqid"] == chrom]
-
-        _, overlapped_genes_bool =\
-        allel.SortedIndex(outlier_chunk["location"]).locate_intersection_ranges(
-            genes_chunk["start"], genes_chunk["end"])
-
-        genes_with_outlier.extend(genes_chunk.loc[overlapped_genes_bool, "name"].values)
-
-    return genes_with_outlier
+#def findGenesWithOutliers(scores, genes, cutoff):
+#    
+#    outlier_sites = scores.loc[scores["LR"] > cutoff]
+#    
+#    chroms = scores["chrom"].unique()
+#    
+#    genes_with_outlier = []
+#
+#    for chrom in chroms:
+#
+#        outlier_chunk = outlier_sites.loc[outlier_sites["chrom"] == chrom]
+#
+#        genes_chunk = genes.loc[genes["seqid"] == chrom]
+#
+#        _, overlapped_genes_bool =\
+#        allel.SortedIndex(outlier_chunk["location"]).locate_intersection_ranges(
+#            genes_chunk["start"], genes_chunk["end"])
+#
+#        genes_with_outlier.extend(genes_chunk.loc[overlapped_genes_bool, "name"].values)
+#
+#    return genes_with_outlier
 
 
 def readScoresAndSites(scoreFileName):
@@ -46,7 +46,7 @@ def readScoresAndSites(scoreFileName):
             if first:
                 first = False
             else:
-                chrom, pos, clr, alpha = line.strip().split("\t")
+                chrom, pos, clr, alpha = line.strip().split("\t")[:4]
                 pos = int(pos)
                 clr = float(clr)
                 site  = (chrom, pos)
@@ -89,12 +89,12 @@ def readAnnotFile(annotFileName):
 
 #TODO: need output args, and also our input GO def file arg
 parser = argparse.ArgumentParser()
-parser.add_argument("--real_scores", help="path to directory with real input scores", required=True)
+parser.add_argument("--real_scores", help="path to file with real input scores", required=True)
 parser.add_argument("--perm_scores", help="path to directory with permuted input scores", required=True)
 parser.add_argument("--perm_delimiter", help="path to directory with permuted input scores", default="_perm_")
 parser.add_argument("--gff3", help="path to genes as defined in .gff3 file", required=True)
 parser.add_argument("--outlier_percentile", 
-                    help="int or float that specifies what score percentile to use as the cutoff for outliers (ex. 95)",
+                    help="int or float that specifies what score percentile to use as the cutoff for outliers (e.g. 97.5)",
                     type=float,
                     required=True)
 parser.add_argument("--n_perms", help="number of permutations", type=int, required=True)
@@ -107,9 +107,7 @@ args = parser.parse_args()
 
 
 sys.stderr.write("reading in scores\n")
-scoresAndSites = []
-for scoreFileName in os.listdir(args.real_scores):
-    scoresAndSites += readScoresAndSites(args.real_scores + "/" + scoreFileName)
+scoresAndSites = readScoresAndSites(args.real_scores)
 
 sites = [x[0] for x in scoresAndSites]
 chroms = [x[0] for x in sites]
@@ -128,7 +126,6 @@ genes = gff3.loc[gff3["type"] == "protein_coding_gene"]
 sys.stderr.write(f"mapping tested sites to genes with a buffer of {args.gene_buffer_dist} bp on either side\n")
 # map sites to genes, and get all tested genes
 siteToGenes = getSiteToGenes(sites, genes, args.gene_buffer_dist)
-print(siteToGenes[('AaegL5_3', 238184261)])
 
 allTestedGenes = {}
 for key in siteToGenes.keys():

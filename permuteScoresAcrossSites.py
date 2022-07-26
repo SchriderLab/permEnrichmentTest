@@ -6,28 +6,31 @@ class Chrom:
         self.sites = sites
 
 
-def readClrScoreFile(clrScoreFileDir, chromNameSuffix):
+def readClrScoreFile(clrScoreFileName):
     chroms = []
     clrScores = []
-    clrScoreFiles = os.listdir(clrScoreFileDir)
-    for clrScoreFile in clrScoreFiles:
 
-        chromName = clrScoreFile.split(chromNameSuffix)[0]
-        with open(clrScoreFileDir + "/" + clrScoreFile, "rt") as csf:
+    with open(clrScoreFileName, "rt") as csf:
 
-            first = True
-            sites = []
-            for line in csf:
-                if first:
-                    header = line.strip()
-                    first = False
-                else:
-                    line = line.strip().split()
-                    sites.append(line[0] + "\t" + line[1])
-                    score = line[2] + "\t" + line[3]
-                    clrScores.append(score)
+        first = True
+        sites = {}
+        for line in csf:
+            if first:
+                header = line.strip()
+                first = False
+            else:
+                line = line.strip().split()
 
-        chroms.append(Chrom(chromName, sites))
+                chromName = line[0]
+                if not chromName in sites:
+                    sites[chromName] = []
+                sites[chromName].append(line[0] + "\t" + line[1])
+
+                score = line[2] + "\t" + line[3]
+                clrScores.append(score)
+
+    for chromName in sites:
+        chroms.append(Chrom(chromName, sites[chromName]))
 
     return header, chroms, clrScores
 
@@ -64,14 +67,14 @@ def permScores(clrScores, chunkSize=None):
 
 def main():
 
-    clrScoreFileDir, chromNameSuffix, numPerms, chunkSize, outDir = sys.argv[1:]
+    clrScoreFileName, numPerms, chunkSize, outDir = sys.argv[1:]
     numPerms = int(numPerms)
     chunkSize = int(chunkSize)
 
     if chunkSize < 0:
         sys.exit("chunkSize must be a non-negative intger. (See README)")
 
-    header, chroms, clrScores = readClrScoreFile(clrScoreFileDir, chromNameSuffix)
+    header, chroms, clrScores = readClrScoreFile(clrScoreFileName)
 
     sys.stderr.write("starting permutations\n")
     for perm in range(numPerms):
